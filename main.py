@@ -205,32 +205,32 @@ async def delete_bill(request: Request, bill_id: int):
 
 
 @app.post("/options/add/payment_method")
-async def add_payment_method(request: Request, method: str = Form(...)):
+async def add_payment_method(request: Request, option_value: str = Form(...)):
     user = require_user(request)
-    if not method or method.strip() == "":
+    if not option_value or option_value.strip() == "":
         return RedirectResponse(url="/bills", status_code=302)
     
-    storage.add_payment_method(method.strip())
+    storage.add_payment_method(option_value.strip())
     return RedirectResponse(url="/bills", status_code=302)
 
 
 @app.post("/options/add/category")
-async def add_category(request: Request, category: str = Form(...)):
+async def add_category(request: Request, option_value: str = Form(...)):
     user = require_user(request)
-    if not category or category.strip() == "":
+    if not option_value or option_value.strip() == "":
         return RedirectResponse(url="/bills", status_code=302)
     
-    storage.add_category(category.strip())
+    storage.add_category(option_value.strip())
     return RedirectResponse(url="/bills", status_code=302)
 
 
 @app.post("/options/add/time_slot")
-async def add_time_slot(request: Request, time_slot: str = Form(...)):
+async def add_time_slot(request: Request, option_value: str = Form(...)):
     user = require_user(request)
-    if not time_slot or time_slot.strip() == "":
+    if not option_value or option_value.strip() == "":
         return RedirectResponse(url="/bills", status_code=302)
     
-    storage.add_time_slot(time_slot.strip())
+    storage.add_time_slot(option_value.strip())
     return RedirectResponse(url="/bills", status_code=302)
 
 
