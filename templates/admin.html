@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记账管理系统 - 用户管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            text-decoration: none;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .content-row {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .card-header {
+            background: #fafafa;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            font-weight: 600;
+            color: #333;
+        }
+        .card-body {
+            padding: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        .error-message {
+            background: #fff2f2;
+            border: 1px solid #ff6b6b;
+            color: #d63031;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .stats-info {
+            background: #f0f5ff;
+            border: 1px solid #adc6ff;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .stats-info p {
+            color: #2f54eb;
+            font-size: 14px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #fafafa;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #333;
+        }
+        tr:hover {
+            background: #fafafa;
+        }
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 6px;
+        }
+        .edit-btn {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        .edit-btn:hover {
+            background: #bae7ff;
+        }
+        .delete-btn {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+        .delete-btn:hover {
+            background: #ffccc7;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            color: #333;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .btn-cancel {
+            padding: 10px 24px;
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-cancel:hover {
+            background: #e8e8e8;
+        }
+        .btn-confirm {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-confirm:hover {
+            opacity: 0.9;
+        }
+        .btn-danger {
+            background: #ff4d4f;
+        }
+        .btn-danger:hover {
+            background: #ff7875;
+        }
+        .user-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>记账管理系统 - 用户管理</h1>
+        <div class="header-info">
+            <span class="user-info">用户：{{ user.username }}（管理员）</span>
+            <a href="/logout" class="logout-btn">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="content-row">
+            <div class="card">
+                <div class="card-header">添加新用户</div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="error-message">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="stats-info">
+                        <p>当前共有 <strong>{{ users|length }}</strong> 个普通用户</p>
+                    </div>
+                    
+                    <form action="/admin/users/create" method="post">
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input type="text" name="username" placeholder="请输入用户名" required>
+                        </div>
+                        <div class="form-group">
+                            <label>初始密码</label>
+                            <input type="password" name="password" placeholder="请输入初始密码" required>
+                        </div>
+                        <button type="submit" class="submit-btn">创建用户</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">用户列表</div>
+                <div class="table-container">
+                    {% if users %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>角色</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>{{ u.id }}</td>
+                                <td><strong>{{ u.username }}</strong></td>
+                                <td><span class="user-badge">{{ u.role.value }}</span></td>
+                                <td>{{ u.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <button class="action-btn edit-btn" onclick="showPasswordModal({{ u.id }}, '{{ u.username }}')">修改密码</button>
+                                    <button class="action-btn delete-btn" onclick="showDeleteModal({{ u.id }}, '{{ u.username }}')">删除用户</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <p>暂无普通用户，请先添加用户</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>修改用户密码</h3>
+                <button class="modal-close" onclick="closeModal('passwordModal')">&times;</button>
+            </div>
+            <form id="passwordForm" method="post">
+                <div class="modal-body">
+                    <p style="margin-bottom: 20px; color: #666;">正在修改用户 <strong id="passwordUsername"></strong> 的密码</p>
+                    <div class="form-group">
+                        <label>新密码</label>
+                        <input type="password" name="new_password" placeholder="请输入新密码" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('passwordModal')">取消</button>
+                    <button type="submit" class="btn-confirm">确认修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal" id="deleteModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>确认删除用户</h3>
+                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除用户 <strong id="deleteUsername" style="color: #ff4d4f;"></strong> 吗？</p>
+                <p style="margin-top: 16px; color: #666; font-size: 13px;">此操作将：</p>
+                <ul style="margin-top: 8px; margin-left: 20px; color: #666; font-size: 13px; line-height: 1.8;">
+                    <li>删除该用户的账号信息</li>
+                    <li>删除该用户所有的账单数据</li>
+                    <li>此操作无法撤销</li>
+                </ul>
+            </div>
+            <form id="deleteForm" method="post">
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('deleteModal')">取消</button>
+                    <button type="submit" class="btn-confirm btn-danger">确认删除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function showPasswordModal(userId, username) {
+            document.getElementById('passwordForm').action = '/admin/users/update/' + userId;
+            document.getElementById('passwordUsername').textContent = username;
+            document.getElementsByName('new_password')[0].value = '';
+            document.getElementById('passwordModal').classList.add('show');
+        }
+        
+        function showDeleteModal(userId, username) {
+            document.getElementById('deleteForm').action = '/admin/users/delete/' + userId;
+            document.getElementById('deleteUsername').textContent = username;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+        
+        window.onclick = function(event) {
+            var modals = document.getElementsByClassName('modal');
+            for (var i = 0; i < modals.length; i++) {
+                if (event.target == modals[i]) {
+                    modals[i].classList.remove('show');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记账管理系统 - 账单管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            text-decoration: none;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+        .stat-card.income {
+            border-left: 4px solid #52c41a;
+        }
+        .stat-card.expense {
+            border-left: 4px solid #ff4d4f;
+        }
+        .stat-card.net {
+            border-left: 4px solid #1890ff;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .stat-card.income .stat-value {
+            color: #52c41a;
+        }
+        .stat-card.expense .stat-value {
+            color: #ff4d4f;
+        }
+        .stat-card.net .stat-value {
+            color: #1890ff;
+        }
+        .content-row {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .card-header {
+            background: #fafafa;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            font-weight: 600;
+            color: #333;
+        }
+        .card-body {
+            padding: 24px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .add-option-btn {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .add-option-btn:hover {
+            background: #bae7ff;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        .filter-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .filter-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #fafafa;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #333;
+        }
+        tr:hover {
+            background: #fafafa;
+        }
+        .type-income {
+            color: #52c41a;
+            font-weight: 600;
+        }
+        .type-expense {
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 6px;
+        }
+        .edit-btn {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        .edit-btn:hover {
+            background: #bae7ff;
+        }
+        .delete-btn {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+        .delete-btn:hover {
+            background: #ffccc7;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            color: #333;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .btn-cancel {
+            padding: 10px 24px;
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-cancel:hover {
+            background: #e8e8e8;
+        }
+        .btn-confirm {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-confirm:hover {
+            opacity: 0.9;
+        }
+        .btn-danger {
+            background: #ff4d4f;
+        }
+        .btn-danger:hover {
+            background: #ff7875;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>记账管理系统</h1>
+        <div class="header-info">
+            <span class="user-info">用户：{{ user.username }}（普通用户）</span>
+            <a href="/logout" class="logout-btn">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stats-row">
+            <div class="stat-card income">
+                <div class="stat-label">总收入</div>
+                <div class="stat-value">¥{{ income_total }}</div>
+            </div>
+            <div class="stat-card expense">
+                <div class="stat-label">总支出</div>
+                <div class="stat-value">¥{{ expense_total }}</div>
+            </div>
+            <div class="stat-card net">
+                <div class="stat-label">净余额</div>
+                <div class="stat-value">¥{{ net_total }}</div>
+            </div>
+        </div>
+        
+        <div class="content-row">
+            <div class="card">
+                <div class="card-header">新增账单</div>
+                <div class="card-body">
+                    <form action="/bills/create" method="post">
+                        <div class="form-group">
+                            <label>收支类型</label>
+                            <select name="transaction_type" required>
+                                {% for t in transaction_types %}
+                                <option value="{{ t }}">{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>金额（元）</label>
+                            <input type="number" name="amount" step="0.01" min="0" placeholder="请输入金额" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>支付时间</label>
+                                <select name="payment_time" required>
+                                    {% for t in time_slots %}
+                                    <option value="{{ t }}">{{ t }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="add-option-btn" onclick="showAddOptionModal('time_slot')">+ 添加时间</button>
+                            </div>
+                            <div class="form-group">
+                                <label>支付方式</label>
+                                <select name="payment_method" required>
+                                    {% for m in payment_methods %}
+                                    <option value="{{ m }}">{{ m }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="add-option-btn" onclick="showAddOptionModal('payment_method')">+ 添加方式</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>账单分类</label>
+                            <select name="category" required>
+                                {% for c in all_categories %}
+                                <option value="{{ c }}">{{ c }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="add-option-btn" onclick="showAddOptionModal('category')">+ 添加分类</button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>备注（选填）</label>
+                            <textarea name="remark" rows="3" placeholder="请输入备注（选填）"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">添加账单</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="filter-section">
+                    <span class="filter-label">分类筛选：</span>
+                    <select class="filter-select" onchange="filterByCategory(this.value)">
+                        {% for c in categories %}
+                        <option value="{{ c }}" {% if c == current_category %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="table-container">
+                    {% if bills %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>类型</th>
+                                <th>金额</th>
+                                <th>支付时间</th>
+                                <th>支付方式</th>
+                                <th>分类</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in bills %}
+                            <tr>
+                                <td>{{ bill.id }}</td>
+                                <td class="{% if bill.transaction_type.value == '收入' %}type-income{% else %}type-expense{% endif %}">
+                                    {{ bill.transaction_type.value }}
+                                </td>
+                                <td><strong>¥{{ bill.amount }}</strong></td>
+                                <td>{{ bill.payment_time }}</td>
+                                <td>{{ bill.payment_method }}</td>
+                                <td>{{ bill.category }}</td>
+                                <td>{{ bill.remark or '-' }}</td>
+                                <td>
+                                    <button class="action-btn edit-btn" onclick="showEditModal({{ bill.id }}, '{{ bill.transaction_type.value }}', {{ bill.amount }}, '{{ bill.payment_time }}', '{{ bill.payment_method }}', '{{ bill.category }}', '{{ bill.remark or '' }}')">编辑</button>
+                                    <button class="action-btn delete-btn" onclick="showDeleteModal({{ bill.id }})">删除</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <p>暂无账单记录</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑账单</h3>
+                <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <form id="editForm" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>收支类型</label>
+                        <select name="transaction_type" id="edit_transaction_type" required>
+                            {% for t in transaction_types %}
+                            <option value="{{ t }}">{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>金额（元）</label>
+                        <input type="number" name="amount" id="edit_amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>支付时间</label>
+                            <select name="payment_time" id="edit_payment_time" required>
+                                {% for t in time_slots %}
+                                <option value="{{ t }}">{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>支付方式</label>
+                            <select name="payment_method" id="edit_payment_method" required>
+                                {% for m in payment_methods %}
+                                <option value="{{ m }}">{{ m }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>账单分类</label>
+                        <select name="category" id="edit_category" required>
+                            {% for c in all_categories %}
+                            <option value="{{ c }}">{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>备注（选填）</label>
+                        <textarea name="remark" id="edit_remark" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('editModal')">取消</button>
+                    <button type="submit" class="btn-confirm">保存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal" id="deleteModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除这条账单吗？此操作无法撤销。</p>
+            </div>
+            <form id="deleteForm" method="post">
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('deleteModal')">取消</button>
+                    <button type="submit" class="btn-confirm btn-danger">确认删除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal" id="addOptionModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="addOptionTitle">添加新选项</h3>
+                <button class="modal-close" onclick="closeModal('addOptionModal')">&times;</button>
+            </div>
+            <form id="addOptionForm" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label id="addOptionLabel">选项名称</label>
+                        <input type="text" name="option_value" id="option_value" placeholder="请输入新选项名称" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('addOptionModal')">取消</button>
+                    <button type="submit" class="btn-confirm">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function filterByCategory(category) {
+            window.location.href = '/bills?category=' + encodeURIComponent(category);
+        }
+        
+        function showEditModal(id, type, amount, paymentTime, paymentMethod, category, remark) {
+            document.getElementById('editForm').action = '/bills/update/' + id;
+            document.getElementById('edit_transaction_type').value = type;
+            document.getElementById('edit_amount').value = amount;
+            document.getElementById('edit_payment_time').value = paymentTime;
+            document.getElementById('edit_payment_method').value = paymentMethod;
+            document.getElementById('edit_category').value = category;
+            document.getElementById('edit_remark').value = remark;
+            document.getElementById('editModal').classList.add('show');
+        }
+        
+        function showDeleteModal(id) {
+            document.getElementById('deleteForm').action = '/bills/delete/' + id;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+        
+        function showAddOptionModal(optionType) {
+            var title, label, action;
+            if (optionType === 'payment_method') {
+                title = '添加支付方式';
+                label = '支付方式名称';
+                action = '/options/add/payment_method';
+            } else if (optionType === 'category') {
+                title = '添加账单分类';
+                label = '分类名称';
+                action = '/options/add/category';
+            } else if (optionType === 'time_slot') {
+                title = '添加支付时间';
+                label = '时间段（如：12:00-18:00）';
+                action = '/options/add/time_slot';
+            }
+            
+            document.getElementById('addOptionTitle').textContent = title;
+            document.getElementById('addOptionLabel').textContent = label;
+            document.getElementById('addOptionForm').action = action;
+            document.getElementById('option_value').placeholder = '请输入' + label;
+            document.getElementById('option_value').value = '';
+            document.getElementById('addOptionModal').classList.add('show');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+        
+        window.onclick = function(event) {
+            var modals = document.getElementsByClassName('modal');
+            for (var i = 0; i < modals.length; i++) {
+                if (event.target == modals[i]) {
+                    modals[i].classList.remove('show');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
